@@ -2,6 +2,10 @@
 # ──────────────────────────────────────────────────────────────
 #  run.sh  —  mvn package 후 spark-submit 으로 스필 테스트 실행
 #
+#  사용법:
+#    bash run.sh                        # local[*] 모드
+#    bash run.sh spark://host:7077      # standalone 클러스터 연결
+#
 #  Spark UI: http://localhost:4040
 #  Stages 탭 → "Shuffle Spill (Memory)" / "Shuffle Spill (Disk)"
 # ──────────────────────────────────────────────────────────────
@@ -9,6 +13,7 @@ set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 JAR_FILE="$PROJECT_DIR/target/spark-spill-test-1.0-SNAPSHOT.jar"
+MASTER="${1:-local[*]}"
 
 # SPARK_HOME 미설정 시 기본 경로 탐색
 if [ -z "$SPARK_HOME" ]; then
@@ -41,14 +46,13 @@ mvn -q package -DskipTests
 
 echo ""
 echo "=== 실행 (spark-submit) ==="
+echo "master: $MASTER"
 echo "Spark UI: http://localhost:4040"
 echo ""
 
-export SPARK_LOCAL_IP=127.0.0.1
-
 "$SPARK_HOME/bin/spark-submit" \
   --class com.example.spill.SpillTest \
-  --master "local[2]" \
+  --master "$MASTER" \
   --driver-memory 1g \
   --conf "spark.executor.memory=512m" \
   --conf "spark.memory.fraction=0.6" \
@@ -56,4 +60,5 @@ export SPARK_LOCAL_IP=127.0.0.1
   --conf "spark.sql.shuffle.partitions=200" \
   --conf "spark.local.dir=/tmp/spark-spill" \
   --conf "spark.ui.port=4040" \
-  "$JAR_FILE"
+  "$JAR_FILE" \
+  "$MASTER"
