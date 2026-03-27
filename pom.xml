@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.example</groupId>
+  <artifactId>spark-spill-test</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+  <name>Spark Spill Test</name>
+
+  <properties>
+    <scala.compat.version>2.13</scala.compat.version>
+    <scala.version>2.13.17</scala.version>
+    <spark.version>4.1.1</spark.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- 로컬 PySpark jar 디렉토리 (build.sh 에서도 동일 경로 사용) -->
+    <spark.jars.dir>/usr/local/lib/python3.11/dist-packages/pyspark/jars</spark.jars.dir>
+  </properties>
+
+  <!--
+    ┌──────────────────────────────────────────────────────────────┐
+    │  네트워크 없는 환경 → system scope 로 로컬 PySpark jar 직접 참조  │
+    │  실제 빌드는 build.sh 의 scalac 명령으로 수행                     │
+    └──────────────────────────────────────────────────────────────┘
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
+      <scope>system</scope>
+      <systemPath>${spark.jars.dir}/scala-library-${scala.version}.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_${scala.compat.version}</artifactId>
+      <version>${spark.version}</version>
+      <scope>system</scope>
+      <systemPath>${spark.jars.dir}/spark-core_${scala.compat.version}-${spark.version}.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_${scala.compat.version}</artifactId>
+      <version>${spark.version}</version>
+      <scope>system</scope>
+      <systemPath>${spark.jars.dir}/spark-sql_${scala.compat.version}-${spark.version}.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-catalyst_${scala.compat.version}</artifactId>
+      <version>${spark.version}</version>
+      <scope>system</scope>
+      <systemPath>${spark.jars.dir}/spark-catalyst_${scala.compat.version}-${spark.version}.jar</systemPath>
+    </dependency>
+  </dependencies>
+
+</project>
