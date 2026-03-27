@@ -15,46 +15,81 @@
     <scala.compat.version>2.13</scala.compat.version>
     <scala.version>2.13.17</scala.version>
     <spark.version>4.1.1</spark.version>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- 로컬 PySpark jar 디렉토리 (build.sh 에서도 동일 경로 사용) -->
-    <spark.jars.dir>/usr/local/lib/python3.11/dist-packages/pyspark/jars</spark.jars.dir>
   </properties>
 
-  <!--
-    ┌──────────────────────────────────────────────────────────────┐
-    │  네트워크 없는 환경 → system scope 로 로컬 PySpark jar 직접 참조  │
-    │  실제 빌드는 build.sh 의 scalac 명령으로 수행                     │
-    └──────────────────────────────────────────────────────────────┘
-  -->
   <dependencies>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
-      <scope>system</scope>
-      <systemPath>${spark.jars.dir}/scala-library-${scala.version}.jar</systemPath>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_${scala.compat.version}</artifactId>
       <version>${spark.version}</version>
-      <scope>system</scope>
-      <systemPath>${spark.jars.dir}/spark-core_${scala.compat.version}-${spark.version}.jar</systemPath>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-sql_${scala.compat.version}</artifactId>
       <version>${spark.version}</version>
-      <scope>system</scope>
-      <systemPath>${spark.jars.dir}/spark-sql_${scala.compat.version}-${spark.version}.jar</systemPath>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.spark</groupId>
-      <artifactId>spark-catalyst_${scala.compat.version}</artifactId>
-      <version>${spark.version}</version>
-      <scope>system</scope>
-      <systemPath>${spark.jars.dir}/spark-catalyst_${scala.compat.version}-${spark.version}.jar</systemPath>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <plugins>
+      <!-- Scala 컴파일러 -->
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <version>4.9.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <scalaVersion>${scala.version}</scalaVersion>
+        </configuration>
+      </plugin>
+
+      <!-- spark-submit 용 fat jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.5.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals><goal>shade</goal></goals>
+            <configuration>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>com.example.spill.SpillTest</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

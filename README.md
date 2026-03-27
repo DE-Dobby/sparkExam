@@ -8,9 +8,7 @@ Spark Spill 현상을 로컬 환경에서 재현하고 확인하는 Scala 프로
 
 ```
 sparkExam/
-├── pom.xml                                     # Maven 프로젝트 정의
-│                                               # (system scope → 로컬 PySpark jar 참조)
-├── build.sh                                    # 오프라인 Scala 컴파일 스크립트
+├── pom.xml                                     # Maven 프로젝트 정의 (Spark 4.1.1 / Scala 2.13)
 ├── run.sh                                      # 빌드 + spark-submit 실행 스크립트
 └── src/
     └── main/
@@ -27,10 +25,10 @@ sparkExam/
 | 항목 | 버전 |
 |------|------|
 | Java | 11 이상 |
-| Python / PySpark | 3.x / 4.1.1 (`pip install pyspark`) |
-| Maven | 3.x (컴파일은 build.sh 사용) |
+| Maven | 3.6 이상 |
+| Spark | 4.1.1 (로컬 설치 필요, `SPARK_HOME` 설정) |
 
-> Maven Central 없이 **로컬 PySpark jar** (Spark 4.1.1 / Scala 2.13)를 재사용하여 빌드합니다.
+의존성은 Maven Central에서 자동으로 다운로드됩니다.
 
 ---
 
@@ -39,27 +37,27 @@ sparkExam/
 ### 1. 빌드 + 실행 (한 번에)
 
 ```bash
+export SPARK_HOME=/path/to/spark   # Spark 설치 경로 설정
 bash run.sh
 ```
 
 ### 2. 빌드만
 
 ```bash
-bash build.sh
-# → target/spark-spill-test.jar 생성
+mvn package -DskipTests
+# → target/spark-spill-test-1.0-SNAPSHOT.jar 생성
 ```
 
-### 3. 빌드 없이 실행만 (jar가 이미 있을 때)
+### 3. 빌드 후 직접 spark-submit
 
 ```bash
-SPARK_HOME=$(python3 -c "import pyspark, os; print(os.path.dirname(pyspark.__file__))")
-export SPARK_LOCAL_IP=127.0.0.1
+mvn package -DskipTests
 
-"$SPARK_HOME/bin/spark-submit" \
+$SPARK_HOME/bin/spark-submit \
   --class com.example.spill.SpillTest \
   --master local[2] \
   --driver-memory 1g \
-  target/spark-spill-test.jar
+  target/spark-spill-test-1.0-SNAPSHOT.jar
 ```
 
 ---
